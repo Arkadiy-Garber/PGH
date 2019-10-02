@@ -739,6 +739,7 @@ if not args.skip:
     dndsDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
     for i in codealign:
         if re.findall(r'mlc', i):
+            print(i)
             file = open(DIR + "/%s" % i, "r")
             for j in file:
                 if re.search(r'#1', j):
