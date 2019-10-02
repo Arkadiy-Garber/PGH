@@ -9,7 +9,7 @@ Identification of pseudogenes based on pairwise comparison between one or more g
     source activate pseudo
     PseudoHunter2.py -h
 
-### quickstart with raw contig
+### quickstart with raw contigs
     PseudoHunter2.py -q contigs.fna -r referenceContigs.fna -out PseudoOutput/
 
 ### quickstart with annotated genes
