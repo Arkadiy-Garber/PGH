@@ -651,6 +651,7 @@ if not args.skip:
     count = 0
     codealign = os.listdir(DIR)
     for file in codealign:
+        print(file)
         if lastItem(file.split(".")) == "ctl":
             count += 1
             perc = (count / total) * 100
