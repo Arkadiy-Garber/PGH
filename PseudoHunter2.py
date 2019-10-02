@@ -505,15 +505,15 @@ if not args.skip:
         query = args.q
         ref = args.r
         print("Predicting open-reading frames...")
-        os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna &> prodigal.out" % (query, query, query))
+        os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (query, query, query))
 
         if args.ref == "one":
-            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna &> prodigal.out" % (ref, ref, ref))
+            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (ref, ref, ref))
         else:
-            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta &> prodigal.out" % (ref, ref, ref))
+            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta" % (ref, ref, ref))
 
-        os.system("rm prodigal.out")
-        print("finished with prodigal")
+        # os.system("rm prodigal.out")
+        # print("finished with prodigal")
 
         faaRef = open(ref + "-proteins.faa")
         faaRef = fasta2(faaRef)
