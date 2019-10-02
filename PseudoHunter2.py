@@ -609,8 +609,8 @@ if not args.skip:
     print("aligning files...")
     DIR = args.out + "/dnds-analysis"
     os.system("for i in %s/*faa; do"
-              " muscle -in $i -out $i.aligned.fa &> muscle.out;"
-              " rm muscle.out;"
+              " muscle -in $i -out $i.aligned.fa;"
+              # " rm muscle.out;"
               " pal2nal.pl $i.aligned.fa $i.fna -output fasta > $i.codonalign.fa;"
               " done" % DIR)
 
