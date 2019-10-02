@@ -508,11 +508,11 @@ if not args.skip:
         os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna &> prodigal.out" % (query, query, query))
 
         if args.ref == "one":
-            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna &> prodigal.out" % (ref, ref, ref))
+            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (ref, ref, ref))
         else:
-            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta &> prodigal.out" % (ref, ref, ref))
+            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta" % (ref, ref, ref))
 
-        os.system("rm prodigal.out")
+        # os.system("rm prodigal.out")
 
         faaRef = open(ref + "-proteins.faa")
         faaRef = fasta2(faaRef)
