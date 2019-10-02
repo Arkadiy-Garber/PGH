@@ -428,7 +428,7 @@ parser.add_argument('-ra', type=str, help="Reference genes in amino acid format"
 parser.add_argument('-gff', type=str, help="gff file for the query genome. Provide only if you are providing this program with"
                                            " genes, rather than contigs", default="NA")
 
-# parser.add_argument('-ctl', type=str, help="template control file for codeml", default="NA")
+parser.add_argument('-ctl', type=str, help="template control file for codeml", default="NA")
 
 parser.add_argument('-out', type=str, help="name output directory", default="PseudoHunter_output")
 
@@ -508,11 +508,12 @@ if not args.skip:
         os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna &> prodigal.out" % (query, query, query))
 
         if args.ref == "one":
-            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (ref, ref, ref))
+            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna &> prodigal.out" % (ref, ref, ref))
         else:
-            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta" % (ref, ref, ref))
+            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta &> prodigal.out" % (ref, ref, ref))
 
-        # os.system("rm prodigal.out")
+        os.system("rm prodigal.out")
+        print("finished with prodigal")
 
         faaRef = open(ref + "-proteins.faa")
         faaRef = fasta2(faaRef)
