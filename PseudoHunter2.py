@@ -528,8 +528,8 @@ if not args.skip:
         if args.s == "blast":
             print("Running BLAST")
             os.system(
-                "makeblastdb -dbtype prot -in %s-proteins.faa -out %s-proteins.faa &> makeblastdb.out" % (args.r, args.r))
-            os.system("rm makeblastdb.out")
+                "makeblastdb -dbtype prot -in %s-proteins.faa -out %s-proteins.faa" % (args.r, args.r))
+            # os.system("rm makeblastdb.out")
             os.system("blastp -query %s-proteins.faa -db %s-proteins.faa "
                       "-outfmt 6 -out %s/pseudogene.blast -evalue 1E-6 -num_threads %s -max_target_seqs 1" % (
                           args.q, args.r, args.out, args.t))
