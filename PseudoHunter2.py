@@ -656,8 +656,8 @@ if not args.skip:
             perc = (count / total) * 100
             sys.stdout.write("running codeml: %d%%   \r" % (perc))
             sys.stdout.flush()
-            os.system("codeml %s/dnds-analysis/%s &> codeml.out" % (args.out, file))
-            os.system("rm codeml.out")
+            os.system("codeml %s/dnds-analysis/%s" % (args.out, file))
+            # os.system("rm codeml.out")
     print("")
 
 
