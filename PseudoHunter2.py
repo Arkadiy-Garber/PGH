@@ -428,7 +428,7 @@ parser.add_argument('-ra', type=str, help="Reference genes in amino acid format"
 parser.add_argument('-gff', type=str, help="gff file for the query genome. Provide only if you are providing this program with"
                                            " genes, rather than contigs", default="NA")
 
-parser.add_argument('-ctl', type=str, help="template control file for codeml", default="NA")
+# parser.add_argument('-ctl', type=str, help="template control file for codeml", default="NA")
 
 parser.add_argument('-out', type=str, help="name output directory", default="PseudoHunter_output")
 
@@ -622,7 +622,7 @@ if not args.skip:
         if re.findall(r'codonalign', file):
             count += 1
             clu = file.split(".faa")[0]
-            setup = open(args.ctl)
+            setup = open(ctl)
             out = open("%s/%s.ctl" % (DIR, str(clu)), "w")
 
             for i in setup:
