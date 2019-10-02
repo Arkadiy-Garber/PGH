@@ -455,6 +455,12 @@ args = parser.parse_args()
 
 cwd = os.getcwd()
 
+os.system("echo ${ctl} > ctl.txt")
+file = open("ctl.txt")
+for i in file:
+    ctl = (i.rstrip())
+os.system("rm ctl.txt")
+
 # MAKING SURE ALL ARGUMENTS ARE THERE
 # try:
 #     test = os.listdir(cwd + "/dnds-analysis")
@@ -500,6 +506,7 @@ if not args.skip:
         ref = args.r
         print("Predicting open-reading frames...")
         os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna &> prodigal.out" % (query, query, query))
+
         if args.ref == "one":
             os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna &> prodigal.out" % (ref, ref, ref))
         else:
@@ -570,7 +577,7 @@ if not args.skip:
 
             # os.system("rm %s.dmnd" % args.ra)
 
-
+####################################################################################################################
     prescreened = []
     alnLengthDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
     blast = open("%s/pseudogene.blast" % args.out)
