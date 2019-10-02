@@ -1,6 +1,6 @@
 # PGH
 ## Pseudogene Hunter 
-Identification of pseudogenes based on pairwise comparison between one or more genomes.
+Identification of pseudogenes based on pairwise comparison between one or more genomes. To use this program, please provide contigs or gene-calls in FASTA format. You must also provide a reference dataset, which must consist of either contigs or gene-calls in FASTA format.
 
 ### easy-installation with conda
     git clone https://github.com/Arkadiy-Garber/PGH.git
