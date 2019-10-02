@@ -12,6 +12,6 @@ Identification of pseudogenes based on pairwise comparison between one or more g
 ### quickstart with raw contig
     PseudoHunter2.py -q contigs.fna -r referenceContigs.fna -out PseudoOutput/
 
-### quickstart with annotated genes (required files: genes in nucleic acid and amino acid FASTA formats, as well as an affiliated gff file)
+### quickstart with annotated genes
     PseudoHunter2.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -out PseudoOutput/
-
+(required files: in addition to genes in nucleic acid and amino acid FASTA formats, you will also need to provide an associated gff annotation file)
