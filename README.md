@@ -22,8 +22,14 @@ PseudoHunter can also looks in intergenic regions for pseudogenes. In this case,
     PseudoHunter4.py -h
 
 ### quickstart with raw contigs
-    PseudoHunter4.py -q contigs.fna -r referenceContigs.fna -out PseudoOutput/
+    PseudoHunter4.py -q contigs.fna -r referenceContigs.fna
 
 ### quickstart with annotated genes
-    PseudoHunter4.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -out PseudoOutput/
+    PseudoHunter4.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff
+    
+### quickstart with annotated genes and contigs
+    PseudoHunter4.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -q contigs.fna -out PseudoHunter_output
+
+### altering paramaters and skipping time-consuming steps by using previously-created output
+    PseudoHunter4.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -q contigs.fna -out PseudoHunter_output --skip
 
