@@ -1,13 +1,25 @@
 # PseudoHunter
 ## Pseudogene Identification Program 
-Identification of pseudogenes based on comparison between one or more genomes. To use this program, please provide contigs or gene-calls in FASTA format. You must also provide a reference dataset, which must consist of either contigs or gene-calls in FASTA format.
+Identification of pseudogenes based on comparison between one or more genomes
+
+### Inputs
+To use this program, please provide contigs or gene-calls in FASTA format.If you would like to predict pseudogenes from previously-predicted gene calls, then you must supply a GFF file. Otherwise, PseudoHunter will take contigs in FASTA format and perform its own gene predictions using Prodigal.
+
+### Reference dataset
+To use PseudoHunter must provide a reference dataset, which can consist of either contigs or gene-calls in FASTA format. This reference dataset can be a single genome, or a collection of genomes. PseudoHunter will use these genomes as a benchmark to predict which genes are pseudogenized in your dataset-of-interest; thus, you must be sure that whatever pseudogenization has occurred in your dataset is not also present in your reference genomes.
+
+### Intergenic regions
+PseudoHunter can also looks in intergenic regions for pseudogenes. In this case, please be sure to provide contigs in FASTA format (regardless of whether you are providing gene calls + GFF inputs)
+
+
+
 
 ### easy-installation with conda
-    git clone https://github.com/Arkadiy-Garber/PGH.git
+    git clone https://github.com/Arkadiy-Garber/PseudoHunter.git
     cd PGH
     ./setup.sh
     source activate pseudo
-    PseudoHunter2.py -h
+    PseudoHunter4.py -h
 
 ### quickstart with raw contigs
     PseudoHunter4.py -q contigs.fna -r referenceContigs.fna -out PseudoOutput/
