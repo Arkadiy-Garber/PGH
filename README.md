@@ -1,6 +1,6 @@
 # PseudoHunter
 ## Pseudogene Identification Program 
-Identification of pseudogenes based on pairwise comparison between one or more genomes. To use this program, please provide contigs or gene-calls in FASTA format. You must also provide a reference dataset, which must consist of either contigs or gene-calls in FASTA format.
+Identification of pseudogenes based on comparison between one or more genomes. To use this program, please provide contigs or gene-calls in FASTA format. You must also provide a reference dataset, which must consist of either contigs or gene-calls in FASTA format.
 
 ### easy-installation with conda
     git clone https://github.com/Arkadiy-Garber/PGH.git
@@ -10,8 +10,8 @@ Identification of pseudogenes based on pairwise comparison between one or more g
     PseudoHunter2.py -h
 
 ### quickstart with raw contigs
-    PseudoHunter2.py -q contigs.fna -r referenceContigs.fna -out PseudoOutput/
+    PseudoHunter4.py -q contigs.fna -r referenceContigs.fna -out PseudoOutput/
 
 ### quickstart with annotated genes
-    PseudoHunter2.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -out PseudoOutput/
-(required files: in addition to genes in nucleic acid and amino acid FASTA formats, you will also need to provide an associated gff annotation file)
+    PseudoHunter4.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -out PseudoOutput/
+
