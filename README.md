@@ -11,7 +11,8 @@ To use PseudoHunter must provide a reference dataset, which can consist of eithe
 ### Intergenic regions
 PseudoHunter can also looks in intergenic regions for pseudogenes. In this case, please be sure to provide contigs in FASTA format (regardless of whether you are providing gene calls + GFF inputs)
 
-
+### Output
+Inside the output directory, you will find a CSV file names "summary.csv". This file will contain information on all predicted ORFs in your dataset, including which are predicted to be pseudogenes, as well as dN/dS ratios, proportion of exected gene length, fragmentation due to stop mutations, etc.
 
 
 ### easy-installation with conda
