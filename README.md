@@ -17,7 +17,7 @@ Inside the output directory, you will find a CSV file names "summary.csv". This 
 
 ### easy-installation with conda
     git clone https://github.com/Arkadiy-Garber/PseudoHunter.git
-    cd PGH
+    cd PseudoHunter
     ./setup.sh
     source activate pseudo
     PseudoHunter4.py -h
