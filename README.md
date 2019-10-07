@@ -1,6 +1,6 @@
 # PseudoHunter
 ## Pseudogene Identification Program 
-Identification of pseudogenes based on comparison between one or more genomes
+Reference-based identification of pseudogenes.
 
 ### Inputs
 To use this program, please provide contigs or gene-calls in FASTA format.If you would like to predict pseudogenes from previously-predicted gene calls, then you must supply a GFF file. Otherwise, PseudoHunter will take contigs in FASTA format and perform its own gene predictions using Prodigal.
