@@ -32,5 +32,5 @@ Inside the output directory, you will find a CSV file names "summary.csv". This 
     PseudoHunter4.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -q contigs.fna -out PseudoHunter_output
 
 ### altering paramaters and skipping time-consuming steps by using previously-created output
-    PseudoHunter4.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -q contigs.fna -out PseudoHunter_output --skip
+    PseudoHunter4.py -n genesNucleicAcids.ffn -a genesAminoAcids.faa -rn referenceNucleicAcids.ffn -ra referenceAminoAcids.faa -gff genes.gff -q contigs.fna -out PseudoHunter_output --skip -M 0.5
 
