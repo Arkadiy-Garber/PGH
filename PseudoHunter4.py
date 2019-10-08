@@ -988,8 +988,8 @@ if not args.skip:
 
         # WRITING TO FILE
         out.write(
-            str(contig) + "," + str(start) + "," + str(end) + "," + str(len(seq)) + "," + str(TotalAlnLength) + "," +
-            str(len(faaRef[i])) + "," + str(identity) + "," + str(annotation) + "," + str(prob) + "," +
+            str(contig) + "," + str(start) + "," + str(end) + "," + str(len(seq) * 3) + "," + str(int(TotalAlnLength) * 3) + "," +
+            str(len(faaRef[i]) * 3) + "," + str(identity) + "," + str(annotation) + "," + str(prob) + "," +
             str(fragments) + "," + str(ratio) + "," + str(len(seq) / len(faaRef[i])) + "," + str(dn) + "," +
             str(ds) + "," + str(dnds) + "," + seq + "," + seq2 + "\n")
 
@@ -1240,7 +1240,7 @@ if not args.skip:
                 out.write(i.rstrip() + "\n")
         out.close()
 
-        os.system("rm %s/ig.blast %s/ig.csv %s/ig.fasta %s/pseudogene.blast" % (args.out, args.out, args.out, args.out))
+        os.system("rm %s/ig.blast %s/ig.csv %s/ig.fasta" % (args.out, args.out, args.out))
         os.system("rm %s/summary-final.csv" % args.out)
 
     ###################################################################################################################
@@ -1700,7 +1700,6 @@ else:
 
                 contig = ls[0].split("!")[1].split("-")[0]
 
-
                 ORF = "IG" + str(contig) + "_" + str(start + int(ls[0].split("!")[1].split("-")[1])) + "-" + str(int(ls[0].split("!")[1].split("-")[1]) + end)
 
                 percIdent = float(ls[2])
@@ -1831,7 +1830,7 @@ else:
                 out.write(i.rstrip() + "\n")
         out.close()
 
-        os.system("rm %s/ig.blast %s/ig.csv %s/ig.fasta %s/pseudogene.blast" % (args.out, args.out, args.out, args.out))
+        os.system("rm %s/ig.blast %s/ig.csv %s/ig.fasta" % (args.out, args.out, args.out))
         os.system("rm %s/summary-final.csv" % args.out)
 
     ##################################################################################################################
