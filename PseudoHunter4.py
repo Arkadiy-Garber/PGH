@@ -988,9 +988,12 @@ if not args.skip:
 
         # WRITING TO FILE
         out.write(
-            str(contig) + "," + str(start) + "," + str(end) + "," + str(len(seq) * 3) + "," + str(int(TotalAlnLength) * 3) + "," +
+            str(contig) + "," + str(start) + "," + str(end) + "," + strand + "," + str(
+                int(end) - int(start)) + "," + str(
+                TotalAlnLength * 3) + "," +
             str(len(faaRef[i]) * 3) + "," + str(identity) + "," + str(annotation) + "," + str(prob) + "," +
-            str(fragments) + "," + str(ratio) + "," + str(len(seq) / len(faaRef[i])) + "," + str(dn) + "," +
+            str(fragments) + "," + str(ratio) + "," + str(((int(end) - int(start)) / 3) / len(faaRef[i])) + "," + str(
+                dn) + "," +
             str(ds) + "," + str(dnds) + "," + seq + "," + seq2 + "\n")
 
         dnList.append(dn)
@@ -1026,20 +1029,21 @@ if not args.skip:
                 summaryDict3[ls[0]]["contig"] = ls[3]
                 summaryDict3[ls[0]]["start"] = ls[4]
                 summaryDict3[ls[0]]["end"] = ls[5]
-                summaryDict3[ls[0]]["geneLength"] = ls[6]
-                summaryDict3[ls[0]]["AlignmentLength"] = ls[7]
-                summaryDict3[ls[0]]["OrthologLength"] = ls[8]
-                summaryDict3[ls[0]]["Identity"] = ls[9]
-                summaryDict3[ls[0]]["Annotation"] = ls[10]
-                summaryDict3[ls[0]]["Pseudogene_confidence"] = ls[11]
-                summaryDict3[ls[0]]["NumberOfGeneFrags"] = ls[12]
-                summaryDict3[ls[0]]["AlignmentLength/OrthologLength"] = ls[13]
-                summaryDict3[ls[0]]["geneLength/OrthologLength"] = ls[14]
-                summaryDict3[ls[0]]["dN"] = ls[15]
-                summaryDict3[ls[0]]["dS"] = ls[16]
-                summaryDict3[ls[0]]["dN/dS"] = ls[17]
+                summaryDict3[ls[0]]["strand"] = ls[6]
+                summaryDict3[ls[0]]["geneLength"] = ls[7]
+                summaryDict3[ls[0]]["AlignmentLength"] = ls[8]
+                summaryDict3[ls[0]]["OrthologLength"] = ls[9]
+                summaryDict3[ls[0]]["Identity"] = ls[10]
+                summaryDict3[ls[0]]["Annotation"] = ls[11]
+                summaryDict3[ls[0]]["Pseudogene_confidence"] = ls[12]
+                summaryDict3[ls[0]]["NumberOfGeneFrags"] = ls[13]
+                summaryDict3[ls[0]]["AlignmentLength/OrthologLength"] = ls[14]
+                summaryDict3[ls[0]]["geneLength/OrthologLength"] = ls[15]
+                summaryDict3[ls[0]]["dN"] = ls[16]
+                summaryDict3[ls[0]]["dS"] = ls[17]
+                summaryDict3[ls[0]]["dN/dS"] = ls[18]
                 summaryDict3[ls[0]]["Translation"] = ls[18]
-                summaryDict3[ls[0]]["Sequences"] = ls[19]
+                summaryDict3[ls[0]]["Sequences"] = ls[20]
             else:
                 firstRow = i.rstrip()
 
@@ -1102,12 +1106,19 @@ if not args.skip:
         for i in blast:
             ls = i.rstrip().split("\t")
 
+            if int(ls[8]) < int(ls[9]):
+                strand = "+"
+            else:
+                strand = "-"
+
             start = int(ls[6])
             end = int(ls[7])
             if end - start > 100:
+
                 contig = ls[0].split("!")[1].split("-")[0]
 
-                ORF = "IG" + str(contig) + "_" + str(start + int(ls[0].split("!")[1].split("-")[1])) + "-" + str(int(ls[0].split("!")[1].split("-")[1]) + end)
+                ORF = "IG" + str(contig) + "_" + str(start + int(ls[0].split("!")[1].split("-")[1])) + "-" + str(
+                    int(ls[0].split("!")[1].split("-")[1]) + end)
 
                 percIdent = float(ls[2])
                 alnLength = int(ls[3])
@@ -1128,13 +1139,14 @@ if not args.skip:
                         # THE PREVIOUSLY-PREDICTED ENDOSYMBIONT ORF THAT IS A
                         # BLAST-MATCH TO THE IG-HOMOLOGOUS ORTHOLOG IS NOT ADJACENT TO THE IG
 
-                        out.write(ORF + "," + FreeLivingOrtholog + "," + "Y" + "," + str(contig) + "," +str(start + int(ls[0].split("!")[1].split("-")[1])) + "," +
-                                  str(int(ls[0].split("!")[1].split("-")[1]) + end) + "," + "NA" + "," + str(len(HomologousRegion)) + "," +
-                                  str(len(refFna[FreeLivingOrtholog])) + "," + str(
-                            percIdent) + "," + "NA" + "," + "NA" + "," + "NA" +
-                                  "," + str(
-                            alnLength / len(refFna[FreeLivingOrtholog])) + "," + "NA" + "," + "NA" + "," + "NA" +
-                                  "," + "NA" + "," + "NA" + "," + HomologousRegion + "\n")
+                        out.write(
+                            ORF + "," + FreeLivingOrtholog + "," + "Y" + "," + str(contig) + "," + str(start) + "," +
+                            str(end) + "," + strand + "," + "NA" + "," + str(len(HomologousRegion)) + "," +
+                            str(len(refFna[FreeLivingOrtholog])) + "," + str(
+                                percIdent) + "," + "NA" + "," + "NA" + "," + "NA" +
+                            "," + str(
+                                alnLength / len(refFna[FreeLivingOrtholog])) + "," + "NA" + "," + "NA" + "," + "NA" +
+                            "," + "NA" + "," + "NA" + "," + HomologousRegion + "\n")
 
                     else:
                         # THE PREVIOUSLY-PREDICTED ENDOSYMBIONT ORF THAT IS A
@@ -1153,19 +1165,20 @@ if not args.skip:
                             newORF = PreExistingOrfHit + "|" + ORF
                             newNucSeq = summaryDict3[PreExistingOrfHit]["Sequences"] + HomologousRegion
 
-                            out.write(newORF + "," + FreeLivingOrtholog + "," + "Y" + "," + summaryDict3[PreExistingOrfHit][
-                                "contig"] + "," +
-                                      str(contigStartPosition) + "," + str(contigEndPosition) + "," + str(
-                                NewGeneLength) + "," +
-                                      str(NewAlignLength) + "," + str(len(refFna[FreeLivingOrtholog])) + "," + str(
-                                NewIdent) + "," +
-                                      summaryDict3[PreExistingOrfHit]["Annotation"] + "," + summaryDict3[PreExistingOrfHit][
-                                          "Pseudogene_confidence"] +
-                                      "," + str(Frags) + "," + str(newAlnRatio) + "," + str(newGeneRatio) + "," +
-                                      summaryDict3[PreExistingOrfHit]["dN"] + "," +
-                                      summaryDict3[PreExistingOrfHit]["dS"] + "," + summaryDict3[PreExistingOrfHit][
-                                          "dN/dS"] + "," + summaryDict3[PreExistingOrfHit]["Translation"] + "," +
-                                      newNucSeq + "\n")
+                            out.write(
+                                newORF + "," + FreeLivingOrtholog + "," + "Y" + "," + summaryDict3[PreExistingOrfHit][
+                                    "contig"] + "," +
+                                str(contigStartPosition) + "," + str(contigEndPosition) + "," + strand + "," + str(
+                                    NewGeneLength) + "," +
+                                str(NewAlignLength) + "," + str(len(refFna[FreeLivingOrtholog])) + "," + str(
+                                    NewIdent) + "," +
+                                summaryDict3[PreExistingOrfHit]["Annotation"] + "," + summaryDict3[PreExistingOrfHit][
+                                    "Pseudogene_confidence"] +
+                                "," + str(Frags) + "," + str(newAlnRatio) + "," + str(newGeneRatio) + "," +
+                                summaryDict3[PreExistingOrfHit]["dN"] + "," +
+                                summaryDict3[PreExistingOrfHit]["dS"] + "," + summaryDict3[PreExistingOrfHit][
+                                    "dN/dS"] + "," + summaryDict3[PreExistingOrfHit]["Translation"] + "," +
+                                newNucSeq + "\n")
 
                         else:
                             contigStartPosition = int(summaryDict3[PreExistingOrfHit]["start"]) - len(HomologousRegion)
@@ -1173,22 +1186,28 @@ if not args.skip:
                             newORF = ORF + "|" + PreExistingOrfHit
                             newNucSeq = HomologousRegion + summaryDict3[PreExistingOrfHit]["Sequences"]
 
-                            out.write(newORF + "," + FreeLivingOrtholog + "," + "Y" + "," + summaryDict3[PreExistingOrfHit]["contig"] + "," +
-                                      str(contigStartPosition) + "," + str(contigEndPosition) + "," + str(NewGeneLength) + "," +
-                                      str(NewAlignLength) + "," + str(len(refFna[FreeLivingOrtholog])) + "," + str(NewIdent) + "," +
-                                      summaryDict3[PreExistingOrfHit]["Annotation"] + "," + summaryDict3[PreExistingOrfHit][
-                                          "Pseudogene_confidence"] +
-                                      "," + str(Frags) + "," + str(newAlnRatio) + "," + str(newGeneRatio) + "," +
-                                      summaryDict3[PreExistingOrfHit]["dN"] + "," +
-                                      summaryDict3[PreExistingOrfHit]["dS"] + "," + summaryDict3[PreExistingOrfHit][
-                                          "dN/dS"] + "," + summaryDict3[PreExistingOrfHit]["Translation"] + "," +
-                                      newNucSeq + '\n')
+                            out.write(
+                                newORF + "," + FreeLivingOrtholog + "," + "Y" + "," + summaryDict3[PreExistingOrfHit][
+                                    "contig"] + "," +
+                                str(contigStartPosition) + "," + str(contigEndPosition) + "," + strand + "," + str(
+                                    NewGeneLength) + "," +
+                                str(NewAlignLength) + "," + str(len(refFna[FreeLivingOrtholog])) + "," + str(
+                                    NewIdent) + "," +
+                                summaryDict3[PreExistingOrfHit]["Annotation"] + "," + summaryDict3[PreExistingOrfHit][
+                                    "Pseudogene_confidence"] +
+                                "," + str(Frags) + "," + str(newAlnRatio) + "," + str(newGeneRatio) + "," +
+                                summaryDict3[PreExistingOrfHit]["dN"] + "," +
+                                summaryDict3[PreExistingOrfHit]["dS"] + "," + summaryDict3[PreExistingOrfHit][
+                                    "dN/dS"] + "," + summaryDict3[PreExistingOrfHit]["Translation"] + "," +
+                                newNucSeq + '\n')
 
                 else:
                     # THE ORTHOLOG IN FREE-LIVING RELATIVE HAD NO PRIOR HITS TO ANY OF THE PREDICTED ENDOSYMBIONT ORFS
                     out.write(
-                        ORF + "," + FreeLivingOrtholog + "," + "Y" + "," + str(contig) + "," + str(start + int(ls[0].split("!")[1].split("-")[1])) + "," + str(int(ls[0].split("!")[1].split("-")[1]) + end) +
-                        "," + "NA" + "," + str(len(HomologousRegion)) + "," + str(len(refFna[FreeLivingOrtholog])) + "," +
+                        ORF + "," + FreeLivingOrtholog + "," + "Y" + "," + str(contig) + "," + str(start) + "," + str(
+                            end) + "," + strand +
+                        "," + "NA" + "," + str(len(HomologousRegion)) + "," + str(
+                            len(refFna[FreeLivingOrtholog])) + "," +
                         str(percIdent) + "," + "NA" + "," + "NA" + "," + "NA" + "," +
                         str(alnLength / len(refFna[FreeLivingOrtholog])) + "," + "NA" + "," + "NA" + "," +
                         "NA" + "," + "NA" + "," + "NA" + "," + HomologousRegion + '\n')
@@ -1223,7 +1242,7 @@ if not args.skip:
             if not re.findall(r'\|', i):
                 out.write(igSummaryDict[i] + "\n")
         out.close()
-################################################################
+
         os.system("rm %s/summary.csv" % args.out)
 
         end = 0
@@ -1287,6 +1306,7 @@ else:
                     gffDict[orf]["contig"] = contig
                     gffDict[orf]["start"] = ls[3]
                     gffDict[orf]["end"] = ls[4]
+                    gffDict[orf]["strand"] = ls[6]
 
     else:
         gffDict = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: 'NA')))
@@ -1303,6 +1323,10 @@ else:
             gffDict[ls[0]]["start"] = start
             gffDict[ls[0]]["end"] = end
             gffDict[ls[0]]["product"] = "NA"
+            if ls[3] == "-1":
+                gffDict[ls[0]]["strand"] = "-"
+            else:
+                gffDict[ls[0]]["strand"] = "+"
 
     if args.ra != "NA":
         faaRef = open(args.ra)
@@ -1435,6 +1459,7 @@ else:
                             ORF = ORFs[0:len(ORFs) - 1]
                             annotation = annotations
 
+                            strand = gffDict[ORF.split("|")[0]]["strand"]
                             contig = gffDict[ORF.split("|")[0]]["contig"]
                             start = gffDict[ORF.split("|")[0]]["start"]
                             end = gffDict[lastItem(ORF.split("|"))]["end"]
@@ -1449,6 +1474,7 @@ else:
                             contig = gffDict[ORF]["contig"]
                             start = gffDict[ORF]["start"]
                             end = gffDict[ORF]["end"]
+                            strand = gffDict[ORF]["strand"]
 
                             annotation = gffDict[ORF]["product"]
                             seq = faa[ORF]
@@ -1503,6 +1529,7 @@ else:
                             annotation = annotations
 
                             contig = gffDict[ORF.split("|")[0]]["contig"]
+                            strand = gffDict[ORF.split("|")[0]]["strand"]
                             start = gffDict[ORF.split("|")[0]]["start"]
                             end = gffDict[lastItem(ORF.split("|"))]["end"]
 
@@ -1513,6 +1540,7 @@ else:
                             originalM0 = m[0]
                             ORF = (l + "_" + str(originalM0))
 
+                            strand = gffDict[ORF]["strand"]
                             contig = gffDict[ORF]["contig"]
                             start = gffDict[ORF]["start"]
                             end = gffDict[ORF]["end"]
@@ -1533,12 +1561,12 @@ else:
             fragments = 1
             ORF = dndsDict2[i][0]
             contig = gffDict[ORF]["contig"]
+            strand = gffDict[ORF]["strand"]
 
             start = gffDict[ORF]["start"]
             end = gffDict[ORF]["end"]
 
             annotation = gffDict[ORF]["product"]
-            print(ORF)
             seq = faa[ORF]
             seq2 = fna[ORF]
             dn = dndsDict[ORF]["dn"]
@@ -1582,10 +1610,10 @@ else:
 
         # WRITING TO FILE
         out.write(
-            str(contig) + "," + str(start) + "," + str(end) + "," + str(len(seq) * 3) + "," + str(
+            str(contig) + "," + str(start) + "," + str(end) + "," + strand + "," + str(int(end) - int(start)) + "," + str(
                 TotalAlnLength * 3) + "," +
             str(len(faaRef[i]) * 3) + "," + str(identity) + "," + str(annotation) + "," + str(prob) + "," +
-            str(fragments) + "," + str(ratio) + "," + str(len(seq) / len(faaRef[i])) + "," + str(dn) + "," +
+            str(fragments) + "," + str(ratio) + "," + str(((int(end) - int(start))/3) / len(faaRef[i])) + "," + str(dn) + "," +
             str(ds) + "," + str(dnds) + "," + seq + "," + seq2 + "\n")
 
         dnList.append(dn)
@@ -1620,20 +1648,21 @@ else:
                 summaryDict3[ls[0]]["contig"] = ls[3]
                 summaryDict3[ls[0]]["start"] = ls[4]
                 summaryDict3[ls[0]]["end"] = ls[5]
-                summaryDict3[ls[0]]["geneLength"] = ls[6]
-                summaryDict3[ls[0]]["AlignmentLength"] = ls[7]
-                summaryDict3[ls[0]]["OrthologLength"] = ls[8]
-                summaryDict3[ls[0]]["Identity"] = ls[9]
-                summaryDict3[ls[0]]["Annotation"] = ls[10]
-                summaryDict3[ls[0]]["Pseudogene_confidence"] = ls[11]
-                summaryDict3[ls[0]]["NumberOfGeneFrags"] = ls[12]
-                summaryDict3[ls[0]]["AlignmentLength/OrthologLength"] = ls[13]
-                summaryDict3[ls[0]]["geneLength/OrthologLength"] = ls[14]
-                summaryDict3[ls[0]]["dN"] = ls[15]
-                summaryDict3[ls[0]]["dS"] = ls[16]
-                summaryDict3[ls[0]]["dN/dS"] = ls[17]
+                summaryDict3[ls[0]]["strand"] = ls[6]
+                summaryDict3[ls[0]]["geneLength"] = ls[7]
+                summaryDict3[ls[0]]["AlignmentLength"] = ls[8]
+                summaryDict3[ls[0]]["OrthologLength"] = ls[9]
+                summaryDict3[ls[0]]["Identity"] = ls[10]
+                summaryDict3[ls[0]]["Annotation"] = ls[11]
+                summaryDict3[ls[0]]["Pseudogene_confidence"] = ls[12]
+                summaryDict3[ls[0]]["NumberOfGeneFrags"] = ls[13]
+                summaryDict3[ls[0]]["AlignmentLength/OrthologLength"] = ls[14]
+                summaryDict3[ls[0]]["geneLength/OrthologLength"] = ls[15]
+                summaryDict3[ls[0]]["dN"] = ls[16]
+                summaryDict3[ls[0]]["dS"] = ls[17]
+                summaryDict3[ls[0]]["dN/dS"] = ls[18]
                 summaryDict3[ls[0]]["Translation"] = ls[18]
-                summaryDict3[ls[0]]["Sequences"] = ls[19]
+                summaryDict3[ls[0]]["Sequences"] = ls[20]
             else:
                 firstRow = i.rstrip()
 
@@ -1694,6 +1723,11 @@ else:
         for i in blast:
             ls = i.rstrip().split("\t")
 
+            if int(ls[8]) < int(ls[9]):
+                strand = "+"
+            else:
+                strand = "-"
+
             start = int(ls[6])
             end = int(ls[7])
             if end - start > 100:
@@ -1722,7 +1756,7 @@ else:
                         # BLAST-MATCH TO THE IG-HOMOLOGOUS ORTHOLOG IS NOT ADJACENT TO THE IG
 
                         out.write(ORF + "," + FreeLivingOrtholog + "," + "Y" + "," + str(contig) + "," + str(start) + "," +
-                                  str(end) + "," + "NA" + "," + str(len(HomologousRegion)) + "," +
+                                  str(end) + "," + strand + "," + "NA" + "," + str(len(HomologousRegion)) + "," +
                                   str(len(refFna[FreeLivingOrtholog])) + "," + str(
                             percIdent) + "," + "NA" + "," + "NA" + "," + "NA" +
                                   "," + str(
@@ -1747,7 +1781,7 @@ else:
                             newNucSeq = summaryDict3[PreExistingOrfHit]["Sequences"] + HomologousRegion
 
                             out.write(newORF + "," + FreeLivingOrtholog + "," + "Y" + "," + summaryDict3[PreExistingOrfHit]["contig"] + "," +
-                                      str(contigStartPosition) + "," + str(contigEndPosition) + "," + str(NewGeneLength) + "," +
+                                      str(contigStartPosition) + "," + str(contigEndPosition) + "," + strand + "," + str(NewGeneLength) + "," +
                                       str(NewAlignLength) + "," + str(len(refFna[FreeLivingOrtholog])) + "," + str(NewIdent) + "," +
                                       summaryDict3[PreExistingOrfHit]["Annotation"] + "," + summaryDict3[PreExistingOrfHit]["Pseudogene_confidence"] +
                                       "," + str(Frags) + "," + str(newAlnRatio) + "," + str(newGeneRatio) + "," +
@@ -1763,7 +1797,7 @@ else:
 
                             out.write(newORF + "," + FreeLivingOrtholog + "," + "Y" + "," + summaryDict3[PreExistingOrfHit][
                                 "contig"] + "," +
-                                      str(contigStartPosition) + "," + str(contigEndPosition) + "," + str(NewGeneLength) + "," +
+                                      str(contigStartPosition) + "," + str(contigEndPosition) + "," + strand + "," + str(NewGeneLength) + "," +
                                       str(NewAlignLength) + "," + str(len(refFna[FreeLivingOrtholog])) + "," + str(
                                 NewIdent) + "," +
                                       summaryDict3[PreExistingOrfHit]["Annotation"] + "," + summaryDict3[PreExistingOrfHit][
@@ -1777,7 +1811,7 @@ else:
                 else:
                     # THE ORTHOLOG IN FREE-LIVING RELATIVE HAD NO PRIOR HITS TO ANY OF THE PREDICTED ENDOSYMBIONT ORFS
                     out.write(
-                        ORF + "," + FreeLivingOrtholog + "," + "Y" + "," + str(contig) + "," + str(start) + "," + str(end) +
+                        ORF + "," + FreeLivingOrtholog + "," + "Y" + "," + str(contig) + "," + str(start) + "," + str(end) + "," + strand +
                         "," + "NA" + "," + str(len(HomologousRegion)) + "," + str(len(refFna[FreeLivingOrtholog])) + "," +
                         str(percIdent) + "," + "NA" + "," + "NA" + "," + "NA" + "," +
                         str(alnLength / len(refFna[FreeLivingOrtholog])) + "," + "NA" + "," + "NA" + "," +
