@@ -788,7 +788,7 @@ if not args.skip:
     dndsList2 = []
     out = open(args.out + "/summary.csv", "w")
     out.write(
-        "ORF_calls" + "," + "Ortholog" + "," + "Pseudogene" + "," + "contig" + "," + "start" + "," + "end" + "," + "geneLength" + "," + "AlignmentLength" + "," +
+        "ORF_calls" + "," + "Ortholog" + "," + "Pseudogene" + "," + "contig" + "," + "start" + "," + "end" + "," + "strand" + "," + "geneLength" + "," + "AlignmentLength" + "," +
         "OrthologLength" + "," + "Identity" + "," + "Annotation" + "," + "Pseudogene_confidence" + "," +
         "NumberOfGeneFrags" + "," + "AlignmentLength/OrthologLength" + "," + "geneLength/OrthologLength" + "," + "dN" + "," + "dS" + "," + "dN/dS" + "," +
         "Translation" + "," + "Sequences" + "\n")
@@ -842,6 +842,7 @@ if not args.skip:
                             ORF = ORFs[0:len(ORFs) - 1]
                             annotation = annotations
 
+                            strand = gffDict[ORF.split("|")[0]]["strand"]
                             contig = gffDict[ORF.split("|")[0]]["contig"]
                             start = gffDict[ORF.split("|")[0]]["start"]
                             end = gffDict[lastItem(ORF.split("|"))]["end"]
@@ -856,6 +857,7 @@ if not args.skip:
                             contig = gffDict[ORF]["contig"]
                             start = gffDict[ORF]["start"]
                             end = gffDict[ORF]["end"]
+                            strand = gffDict[ORF]["strand"]
 
                             annotation = gffDict[ORF]["product"]
                             seq = faa[ORF]
@@ -910,6 +912,7 @@ if not args.skip:
                             annotation = annotations
 
                             contig = gffDict[ORF.split("|")[0]]["contig"]
+                            strand = gffDict[ORF.split("|")[0]]["strand"]
                             start = gffDict[ORF.split("|")[0]]["start"]
                             end = gffDict[lastItem(ORF.split("|"))]["end"]
 
@@ -920,6 +923,7 @@ if not args.skip:
                             originalM0 = m[0]
                             ORF = (l + "_" + str(originalM0))
 
+                            strand = gffDict[ORF]["strand"]
                             contig = gffDict[ORF]["contig"]
                             start = gffDict[ORF]["start"]
                             end = gffDict[ORF]["end"]
@@ -940,6 +944,7 @@ if not args.skip:
             fragments = 1
             ORF = dndsDict2[i][0]
             contig = gffDict[ORF]["contig"]
+            strand = gffDict[ORF]["strand"]
 
             start = gffDict[ORF]["start"]
             end = gffDict[ORF]["end"]
@@ -957,7 +962,7 @@ if not args.skip:
 
         ratio = TotalAlnLength / len(faaRef[i])
 
-        out.write(ORF + "," + i + ',')
+        out.write(ORF + "," + i + ",")
 
         if dnds > args.d or ratio < args.l or fragments > 1 or ratio / (len(seq) / len(faaRef[i])) < args.l:
             out.write("Y" + ",")
@@ -1405,7 +1410,7 @@ else:
     dndsList2 = []
     out = open(args.out + "/summary.csv", "w")
     out.write(
-        "ORF_calls" + "," + "Ortholog" + "," + "Pseudogene" + "," + "contig" + "," + "start" + "," + "end" + "," + "geneLength" + "," + "AlignmentLength" + "," +
+        "ORF_calls" + "," + "Ortholog" + "," + "Pseudogene" + "," + "contig" + "," + "start" + "," + "end" + "," + "strand" + "," + "geneLength" + "," + "AlignmentLength" + "," +
         "OrthologLength" + "," + "Identity" + "," + "Annotation" + "," + "Pseudogene_confidence" + "," +
         "NumberOfGeneFrags" + "," + "AlignmentLength/OrthologLength" + "," + "geneLength/OrthologLength" + "," + "dN" + "," + "dS" + "," + "dN/dS" + "," +
         "Translation" + "," + "Sequences" + "\n")
