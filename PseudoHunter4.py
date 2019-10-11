@@ -695,6 +695,7 @@ if not args.skip:
                     gffDict[orf]["contig"] = contig
                     gffDict[orf]["start"] = ls[3]
                     gffDict[orf]["end"] = ls[4]
+                    gffDict[orf]["strand"] = ls[6]
 
     else:
         gffDict = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: 'NA')))
@@ -710,6 +711,10 @@ if not args.skip:
             gffDict[ls[0]]["start"] = start
             gffDict[ls[0]]["end"] = end
             gffDict[ls[0]]["product"] = "NA"
+            if ls[3] == "-1":
+                gffDict[ls[0]]["strand"] = "-"
+            else:
+                gffDict[ls[0]]["strand"] = "+"
 
     if args.ra != "NA":
         faaRef = open(args.ra)
@@ -739,9 +744,22 @@ if not args.skip:
         fna = open(args.q + "-proteins.fna")
         fna = fasta2(fna)
 
+    for i in faa.keys():
+        print(i)
+        print(faa[i])
+        print("")
+
+    print("\n\n")
+
+    for i in fna.keys():
+        print(i)
+        print(fna[i])
+        print("")
+    print("\n\n")
+
     alnLengthDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
     alnIdDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
-    blast = open("%s/pseudogene.blast" % args.out)
+    blast = open(args.out + "/pseudogene.blast")
     for i in blast:
         ls = i.rstrip().split("\t")
         alnLengthDict[ls[0]][ls[1]] = ls[3]
@@ -860,6 +878,9 @@ if not args.skip:
                             strand = gffDict[ORF]["strand"]
 
                             annotation = gffDict[ORF]["product"]
+                            print("1")
+                            print(ORF)
+                            print("")
                             seq = faa[ORF]
                             seq2 = fna[ORF]
 
@@ -993,18 +1014,15 @@ if not args.skip:
 
         # WRITING TO FILE
         out.write(
-            str(contig) + "," + str(start) + "," + str(end) + "," + strand + "," + str(
-                int(end) - int(start)) + "," + str(
+            str(contig) + "," + str(start) + "," + str(end) + "," + strand + "," + str(int(end) - int(start)) + "," + str(
                 TotalAlnLength * 3) + "," +
             str(len(faaRef[i]) * 3) + "," + str(identity) + "," + str(annotation) + "," + str(prob) + "," +
-            str(fragments) + "," + str(ratio) + "," + str(((int(end) - int(start)) / 3) / len(faaRef[i])) + "," + str(
-                dn) + "," +
+            str(fragments) + "," + str(ratio) + "," + str(((int(end) - int(start))/3) / len(faaRef[i])) + "," + str(dn) + "," +
             str(ds) + "," + str(dnds) + "," + seq + "," + seq2 + "\n")
 
         dnList.append(dn)
         dsList.append(ds)
         dndsList2.append(dnds)
-
     out.close()
 
     # INTERGENIC REGION ANALYSIS
@@ -1256,10 +1274,10 @@ if not args.skip:
         for i in summaryExtend:
             ls = i.rstrip().split(",")
             if (re.findall(r'IG', ls[0]) and not re.findall(r'\|', ls[0])):
-                start = (ls[0].split("_")[1].split("-")[0])
+                start = lastItem(ls[0].split("_")).split("-")[0]
                 if int(start) > int(end) - 10:
                     out.write(i.rstrip() + "\n")
-                end = (ls[0].split("_")[1].split("-")[1])
+                end = lastItem(ls[0].split("_")).split("-")[1]
             else:
                 out.write(i.rstrip() + "\n")
         out.close()
@@ -1360,6 +1378,14 @@ else:
     else:
         fna = open(args.q + "-proteins.fna")
         fna = fasta2(fna)
+
+    for i in faa.keys():
+        print(i)
+    print("\n")
+
+    for i in fna.keys():
+        print(i)
+    print("\n\n")
 
     alnLengthDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
     alnIdDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
@@ -1861,10 +1887,12 @@ else:
         for i in summaryExtend:
             ls = i.rstrip().split(",")
             if (re.findall(r'IG', ls[0]) and not re.findall(r'\|', ls[0])):
-                start = (ls[0].split("_")[1].split("-")[0])
+                start = lastItem(ls[0].split("_")).split("-")[0]
+                # start = (ls[0].split("_")[1].split("-")[0])
                 if int(start) > int(end) - 10:
                     out.write(i.rstrip() + "\n")
-                end = (ls[0].split("_")[1].split("-")[1])
+                end = lastItem(ls[0].split("_")).split("-")[1]
+                # end = (ls[0].split("_")[1].split("-")[1])
             else:
                 out.write(i.rstrip() + "\n")
         out.close()
@@ -1880,7 +1908,7 @@ else:
         print("Average dS among orthologs: " + str(ave(dsList)))
         print("Average dN/dS among orthologs: " + str(ave(dndsList2)))
         print("")
-
+        os.system("rm 2NG.t 2NG.dN 2NG.dS rst1 rst 2ML.t 2ML.dN 2ML.dS 4fold.nuc rub")
         print("Pipeline finished without any crashes. Thanks for using pseudoHunter!")
     else:
         print("")
