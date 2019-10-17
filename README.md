@@ -3,13 +3,13 @@
 Reference-based identification of pseudogenes.
 
 ### Inputs
-To use this program, please provide contigs or gene-calls in FASTA format.If you would like to predict pseudogenes from previously-predicted gene calls, then you must supply a GFF file. Otherwise, PseudoHunter will take contigs in FASTA format and perform its own gene predictions using Prodigal.
+To use this program, please provide contigs or gene-calls in FASTA format. If you would like to predict pseudogenes from previously-predicted gene calls, then you must supply a GFF file along with the gene-calls. Otherwise, PseudoHunter will take contigs in FASTA format and perform its own gene predictions using Prodigal.
 
 ### Reference dataset
 To use PseudoHunter must provide a reference dataset, which can consist of either contigs or gene-calls in FASTA format. This reference dataset can be a single genome, or a collection of genomes. PseudoHunter will use these genomes as a benchmark to predict which genes are pseudogenized in your dataset-of-interest; thus, you must be sure that whatever pseudogenization has occurred in your dataset is not also present in your reference genomes.
 
 ### Intergenic regions
-PseudoHunter can also identify pseudogenes in intergenic regions. In this case, please be sure to provide contigs in FASTA format (regardless of whether you are providing gene calls + GFF inputs)
+PseudoHunter can also identify pseudogenes in intergenic regions. In this case, please be sure to provide contigs in FASTA format (regardless of whether you are providing gene calls + GFF inputs). For example, you can provide gene-calls with an associated GFF file (with the -a, -n, and -gff argument), and also provide the raw contigs using the -q argument.
 
 ### Output
 Inside the output directory, you will find a CSV file names "summary.csv". This file will contain information on all predicted ORFs in your dataset, including which are predicted to be pseudogenes, as well as dN/dS ratios, proportion of exected gene length, fragmentation due to stop mutations, etc.
