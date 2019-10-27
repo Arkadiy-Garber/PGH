@@ -14,7 +14,7 @@ conda config --add channels conda-forge 2> /dev/null
 conda config --add channels au-eoed 2> /dev/null
 
 ## creating GToTree environment and installing dependencies
-conda create -n pseudo blast diamond pal2nal muscle paml prodigal --yes
+conda create -n pseudo blast diamond pal2nal muscle paml prodigal biopython plotly pandas numpy reportlab --yes
 
 ## activating environment
 source activate pseudo
