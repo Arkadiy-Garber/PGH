@@ -7,6 +7,8 @@ NC='\033[0m'
 
 printf "\n    ${GREEN}Setting up conda environment...${NC}\n\n"
 
+chmod +x pseudofinder.py
+
 ## adding conda channels
 conda config --add channels defaults 2> /dev/null
 conda config --add channels bioconda 2> /dev/null
