@@ -329,10 +329,18 @@ def fasta2(fasta_file):
             if len(seq) > 0:
                 Dict[header] = seq
                 header = i[1:]
+                # if re.findall(r'locus_tag', header):
+                #     header = header.split("locus_tag=")[1]
+                #     header = header.split(";")[0]
+                # else:
                 header = header.split(" ")[0]
                 seq = ''
             else:
                 header = i[1:]
+                # if re.findall(r'locus_tag', header):
+                #     header = header.split("locus_tag=")[1]
+                #     header = header.split(";")[0]
+                # else:
                 header = header.split(" ")[0]
                 seq = ''
         else:
@@ -446,15 +454,23 @@ parser.add_argument('-out', type=str, help="name output directory", default="Pse
 
 parser.add_argument('-l', type=float,
                     help="minimum proportion of of target gene length that must be covered by alignment with query gene "
-                         "for the query gene to be calssified as \'intact\' (default = 0.7)",
-                    default=0.7)
+                         "for the query gene to be classified as \'intact\' (default = 0.75)",
+                    default=0.75)
+
+parser.add_argument('-L', type=float,
+                    help="maximum run-on length, relative to reference, for a gene to be classified as \'intact\' (default = 1.25)",
+                    default=1.25)
 
 parser.add_argument('-d', type=float, help="maximum dN/dS value for gene too be considered \'intact\' (default = 0.3)",
                     default=0.3)
 parser.add_argument('-M', type=float, help="maximum dS value for dN/dS calculation (default = 3)", default=3)
 parser.add_argument('-m', type=float, help="minimum dS value for dN/dS calculation (default = 0.001)", default=0.001)
 parser.add_argument('-t', type=int, help="number of threads to use for BLAST", default=1)
+parser.add_argument('-e', type=str, help="e-value for BLAST search. Default = 1E-6", default=float(1E-6))
 parser.add_argument('-s', type=str, help="search engine to use (blast/diamond). Default = blast", default="blast")
+parser.add_argument('-delim', type=str, help="if you are poviding files with gene sequences, please provide a character "
+                                             "that separates the gene number from the rest of the header name "
+                                             "(ex: contig_1, that character is \'_\'). Default = \'_\'", default="_")
 parser.add_argument('--skip', type=str,
                     help="By choosing this option, and providing pseudoHunter with the previously-created output directory, "
                          "you are choosing to skip time-consuming steps of this pipeline "
@@ -593,7 +609,9 @@ if not args.skip:
     for i in blast:
         ls = i.rstrip().split("\t")
         if ls[0] not in prescreened:
-
+            print(ls[0])
+            print(ls[1])
+            print("")
             alnLengthDict[ls[0]] = ls[3]
 
             outNUC = open(args.out + "/dnds-analysis/%s.faa.fna" % ls[0], "w")
@@ -733,9 +751,11 @@ if not args.skip:
     if args.a != "NA" and mode == 0:
         faa = open(args.a)
         faa = fasta2(faa)
+
     else:
         faa = open(args.q + "-proteins.faa")
         faa = fasta2(faa)
+
 
     if args.n != "NA" and mode == 0:
         fna = open(args.n)
@@ -743,19 +763,6 @@ if not args.skip:
     else:
         fna = open(args.q + "-proteins.fna")
         fna = fasta2(fna)
-
-    for i in faa.keys():
-        print(i)
-        print(faa[i])
-        print("")
-
-    print("\n\n")
-
-    for i in fna.keys():
-        print(i)
-        print(fna[i])
-        print("")
-    print("\n\n")
 
     alnLengthDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
     alnIdDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
@@ -796,9 +803,13 @@ if not args.skip:
             orf = dndsDict[i]["orf"]
             dn = dndsDict[i]["dn"]
             ds = dndsDict[i]["ds"]
-            dnds = float(dndsDict[i]["dn"]) / float(dndsDict[i]["ds"])
+            try:
+                dnds = float(dndsDict[i]["dn"]) / float(dndsDict[i]["ds"])
+            except ZeroDivisionError:
+                dnds = "NA"
             dndsDict2[orf].append(i)
-            dndsList.append(dnds)
+            if dnds != "NA":
+                dndsList.append(dnds)
 
     print("preparing final output file: summary.csv")
     dsList = []
@@ -815,7 +826,7 @@ if not args.skip:
         if len(dndsDict2[i]) > 1:
             dndsDict3 = defaultdict(list)
             for k in dndsDict2[i]:
-                dndsDict3[allButTheLast(k, "_")].append(int(lastItem(k.split("_"))))
+                dndsDict3[allButTheLast(k, args.delim)].append(int(lastItem(k.split(args.delim))))
             for l in dndsDict3.keys():
                 listOfLists = (cluster(dndsDict3[l], 2))
                 for m in listOfLists:
@@ -834,7 +845,7 @@ if not args.skip:
                             for n in m:
                                 originalN = stabilityCounter(n)
                                 # originalN = n
-                                ORF = (l + "_" + str(originalN))
+                                ORF = (l + args.delim + str(originalN))
 
                                 ORFs += ORF + "|"
 
@@ -855,7 +866,12 @@ if not args.skip:
 
                             dn = ave(dnLS)
                             ds = ave(dsLS)
-                            dnds = dn / ds
+
+                            try:
+                                dnds = dn / ds
+                            except ZeroDivisionError:
+                                dnds = "NA"
+
                             fragments = len(m)
                             ORF = ORFs[0:len(ORFs) - 1]
                             annotation = annotations
@@ -870,7 +886,7 @@ if not args.skip:
                             fragments = 1
                             originalM0 = stabilityCounter(m[0])
                             # originalM0 = m[0]
-                            ORF = (l + "_" + str(originalM0))
+                            ORF = (l + args.delim + str(originalM0))
 
                             contig = gffDict[ORF]["contig"]
                             start = gffDict[ORF]["start"]
@@ -878,9 +894,6 @@ if not args.skip:
                             strand = gffDict[ORF]["strand"]
 
                             annotation = gffDict[ORF]["product"]
-                            print("1")
-                            print(ORF)
-                            print("")
                             seq = faa[ORF]
                             seq2 = fna[ORF]
 
@@ -890,7 +903,11 @@ if not args.skip:
 
                             dn = dndsDict[ORF]["dn"]
                             ds = dndsDict[ORF]["ds"]
-                            dnds = float(dn) / float(ds)
+
+                            try:
+                                dnds = float(dn) / float(ds)
+                            except ZeroDivisionError:
+                                dnds = "NA"
 
                     except (TypeError, ValueError):
                         if len(m) > 1:
@@ -906,7 +923,7 @@ if not args.skip:
                             for n in m:
                                 # originalN = stabilityCounter(n)
                                 originalN = n
-                                ORF = (l + "_" + str(originalN))
+                                ORF = (l + args.delim + str(originalN))
 
                                 ORFs += ORF + "|"
 
@@ -927,7 +944,12 @@ if not args.skip:
 
                             dn = ave(dnLS)
                             ds = ave(dsLS)
-                            dnds = dn / ds
+
+                            try:
+                                dnds = dn / ds
+                            except ZeroDivisionError:
+                                dnds = "NA"
+
                             fragments = len(m)
                             ORF = ORFs[0:len(ORFs) - 1]
                             annotation = annotations
@@ -942,7 +964,7 @@ if not args.skip:
                             fragments = 1
                             # originalM0 = stabilityCounter(m[0])
                             originalM0 = m[0]
-                            ORF = (l + "_" + str(originalM0))
+                            ORF = (l + args.delim + str(originalM0))
 
                             strand = gffDict[ORF]["strand"]
                             contig = gffDict[ORF]["contig"]
@@ -959,7 +981,10 @@ if not args.skip:
 
                             dn = dndsDict[ORF]["dn"]
                             ds = dndsDict[ORF]["ds"]
-                            dnds = float(dn) / float(ds)
+                            try:
+                                dnds = float(dn) / float(ds)
+                            except ZeroDivisionError:
+                                dnds = "NA"
 
         else:
             fragments = 1
@@ -975,7 +1000,11 @@ if not args.skip:
             seq2 = fna[ORF]
             dn = dndsDict[ORF]["dn"]
             ds = dndsDict[ORF]["ds"]
-            dnds = float(dn) / float(ds)
+
+            try:
+                dnds = float(dn) / float(ds)
+            except ZeroDivisionError:
+                dnds = "NA"
 
             TotalAlnLength = int(alnLengthDict[ORF][i])
 
@@ -985,34 +1014,79 @@ if not args.skip:
 
         out.write(ORF + "," + i + ",")
 
-        if dnds > args.d or ratio < args.l or fragments > 1 or ratio / (len(seq) / len(faaRef[i])) < args.l:
-            out.write("Y" + ",")
-            prob = 1
+        if dnds != "NA":
+            if dnds > args.d or ratio < args.l or fragments > 1 or (len(seq) / len(faaRef[i])) > args.L:
+                out.write("Y" + ",")
+                prob = 1
 
-            # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
-            inflation = float(dnds) / ave(dndsList)
+                # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
+                if dnds != "NA":
+                    inflation = float(dnds) / ave(dndsList)
+                else:
+                    inflation = ave(dndsList)
 
-            prob = prob * inflation
-            prob = prob * float(fragments)
-            if ratio < 1:
-                prob = prob / ratio
+                prob = prob * inflation
+                prob = prob * float(fragments)
+                if ratio < 1:
+                    prob = prob / ratio
+                else:
+                    prob = prob * ratio
+
             else:
-                prob = prob * ratio
+                out.write("N" + ",")
 
+                # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
+                prob = 1
+
+                if dnds != "NA":
+                    inflation = float(dnds) / ave(dndsList)
+                else:
+                    inflation = ave(dndsList)
+
+                prob = prob * inflation
+                prob = prob * float(fragments)
+                if ratio < 1:
+                    prob = prob / ratio
+                else:
+                    prob = prob * ratio
         else:
-            out.write("N" + ",")
+            if ratio < args.l or fragments > 1 or (len(seq) / len(faaRef[i])) > args.L:
+                out.write("Y" + ",")
+                prob = 1
 
-            # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
-            prob = 1
-            inflation = float(dnds) / ave(dndsList)
-            prob = prob * inflation
-            prob = prob * float(fragments)
-            if ratio < 1:
-                prob = prob / ratio
+                # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
+                if dnds != "NA":
+                    inflation = float(dnds) / ave(dndsList)
+                else:
+                    inflation = ave(dndsList)
+
+                prob = prob * inflation
+                prob = prob * float(fragments)
+                if ratio < 1:
+                    prob = prob / ratio
+                else:
+                    prob = prob * ratio
+
             else:
-                prob = prob * ratio
+                out.write("N" + ",")
+
+                # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
+                prob = 1
+
+                if dnds != "NA":
+                    inflation = float(dnds) / ave(dndsList)
+                else:
+                    inflation = ave(dndsList)
+
+                prob = prob * inflation
+                prob = prob * float(fragments)
+                if ratio < 1:
+                    prob = prob / ratio
+                else:
+                    prob = prob * ratio
 
         # WRITING TO FILE
+
         out.write(
             str(contig) + "," + str(start) + "," + str(end) + "," + strand + "," + str(int(end) - int(start)) + "," + str(
                 TotalAlnLength * 3) + "," +
@@ -1022,7 +1096,9 @@ if not args.skip:
 
         dnList.append(dn)
         dsList.append(ds)
-        dndsList2.append(dnds)
+
+        if dnds != "NA":
+            dndsList2.append(dnds)
     out.close()
 
     # INTERGENIC REGION ANALYSIS
@@ -1065,7 +1141,7 @@ if not args.skip:
                 summaryDict3[ls[0]]["dN"] = ls[16]
                 summaryDict3[ls[0]]["dS"] = ls[17]
                 summaryDict3[ls[0]]["dN/dS"] = ls[18]
-                summaryDict3[ls[0]]["Translation"] = ls[18]
+                summaryDict3[ls[0]]["Translation"] = ls[19]
                 summaryDict3[ls[0]]["Sequences"] = ls[20]
             else:
                 firstRow = i.rstrip()
@@ -1268,6 +1344,7 @@ if not args.skip:
 
         os.system("rm %s/summary.csv" % args.out)
 
+        count = 0
         end = 0
         out = open("%s/summary.csv" % args.out, "w")
         summaryExtend = open("%s/summary-final.csv" % args.out)
@@ -1276,9 +1353,11 @@ if not args.skip:
             if (re.findall(r'IG', ls[0]) and not re.findall(r'\|', ls[0])):
                 start = lastItem(ls[0].split("_")).split("-")[0]
                 if int(start) > int(end) - 10:
+                    count += 1
                     out.write(i.rstrip() + "\n")
                 end = lastItem(ls[0].split("_")).split("-")[1]
             else:
+                count += 1
                 out.write(i.rstrip() + "\n")
         out.close()
 
@@ -1293,7 +1372,7 @@ if not args.skip:
         print("Average dS among orthologs: " + str(ave(dsList)))
         print("Average dN/dS among orthologs: " + str(ave(dndsList2)))
         print("")
-        os.system("rm 2NG.t 2NG.dN 2NG.dS rst1 rst 2ML.t 2ML.dN 2ML.dS 4fold.nuc rub")
+        os.system("rm -f 2NG.t 2NG.dN 2NG.dS rst1 rst 2ML.t 2ML.dN 2ML.dS 4fold.nuc rub")
         print("Pipeline finished without any crashes. Thanks for using pseudoHunter!")
     else:
         print("")
@@ -1319,12 +1398,14 @@ else:
                 if not re.match(r'#', i):
                     contig = ls[0]
                     orf = ls[8]
+                    # if not re.findall(r'Alias', ls[8]):
                     orf = orf.split(";")[0]
+                    # else:
+                    #     orf = orf.split(";")[1]
                     orf = orf.split("=")[1]
 
                     product = lastItem(ls[8].split(";")).split("=")[1]
                     product = replace(product, [","], ";")
-
                     gffDict[orf]["product"] = product
                     gffDict[orf]["contig"] = contig
                     gffDict[orf]["start"] = ls[3]
@@ -1368,6 +1449,7 @@ else:
     if args.a != "NA" and mode == 0:
         faa = open(args.a)
         faa = fasta2(faa)
+
     else:
         faa = open(args.q + "-proteins.faa")
         faa = fasta2(faa)
@@ -1375,16 +1457,11 @@ else:
     if args.n != "NA" and mode == 0:
         fna = open(args.n)
         fna = fasta2(fna)
+
     else:
         fna = open(args.q + "-proteins.fna")
         fna = fasta2(fna)
 
-    for i in faa.keys():
-        print(i)
-    print("\n")
-
-    for i in fna.keys():
-        print(i)
     print("\n\n")
 
     alnLengthDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
@@ -1426,9 +1503,13 @@ else:
             orf = dndsDict[i]["orf"]
             dn = dndsDict[i]["dn"]
             ds = dndsDict[i]["ds"]
-            dnds = float(dndsDict[i]["dn"]) / float(dndsDict[i]["ds"])
+            try:
+                dnds = float(dndsDict[i]["dn"]) / float(dndsDict[i]["ds"])
+            except ZeroDivisionError:
+                dnds = "NA"
             dndsDict2[orf].append(i)
-            dndsList.append(dnds)
+            if dnds != "NA":
+                dndsList.append(dnds)
 
     print("preparing final output file: summary.csv")
     dsList = []
@@ -1441,152 +1522,176 @@ else:
         "NumberOfGeneFrags" + "," + "AlignmentLength/OrthologLength" + "," + "geneLength/OrthologLength" + "," + "dN" + "," + "dS" + "," + "dN/dS" + "," +
         "Translation" + "," + "Sequences" + "\n")
 
+
+    delimiter = ''
     for i in dndsDict2.keys():
         if len(dndsDict2[i]) > 1:
             dndsDict3 = defaultdict(list)
             for k in dndsDict2[i]:
-                dndsDict3[allButTheLast(k, "_")].append(int(lastItem(k.split("_"))))
+                dndsDict3[allButTheLast(k, args.delim)].append(int(lastItem(k.split(args.delim))))
             for l in dndsDict3.keys():
-                listOfLists = (cluster(dndsDict3[l], 2))
-                for m in listOfLists:
-                    try:
-                        if len(m) > 1:
-                            seq = ''
-                            seq2 = ''
-                            dnLS = []
-                            dsLS = []
-                            annotations = ''
-                            ORFs = ''
-                            TotalAlnLength = 0
+                if l != "":
+                    listOfLists = (cluster(dndsDict3[l], 2))
+                    for m in listOfLists:
+                        try:
+                            if len(m) > 1:
+                                seq = ''
+                                seq2 = ''
+                                dnLS = []
+                                dsLS = []
+                                annotations = ''
+                                ORFs = ''
+                                TotalAlnLength = 0
 
-                            idLS = []
+                                idLS = []
 
-                            for n in m:
-                                originalN = stabilityCounter(n)
-                                # originalN = n
-                                ORF = (l + "_" + str(originalN))
+                                for n in m:
+                                    originalN = stabilityCounter(n)
+                                    originalN = n
+                                    ORF = (l + args.delim + str(originalN))
 
-                                ORFs += ORF + "|"
+                                    ORFs += ORF + "|"
 
-                                annotation = gffDict[ORF]["product"]
-                                annotations += annotation + "|"
-                                seq += faa[ORF]
-                                seq2 += fna[ORF]
-                                dnLS.append(float(dndsDict[ORF]["dn"]))
-                                dsLS.append(float(dndsDict[ORF]["ds"]))
+                                    annotation = gffDict[ORF]["product"]
+                                    annotations += annotation + "|"
 
-                                alnLength = int(alnLengthDict[ORF][i])
-                                TotalAlnLength += alnLength
+                                    seq += faa[ORF]
+                                    seq2 += fna[ORF]
+                                    dnLS.append(float(dndsDict[ORF]["dn"]))
+                                    dsLS.append(float(dndsDict[ORF]["ds"]))
 
-                                identity = float(alnIdDict[ORF][i])
-                                idLS.append(identity)
+                                    alnLength = int(alnLengthDict[ORF][i])
+                                    TotalAlnLength += alnLength
 
-                            identity = ave(idLS)
+                                    identity = float(alnIdDict[ORF][i])
+                                    idLS.append(identity)
 
-                            dn = ave(dnLS)
-                            ds = ave(dsLS)
-                            dnds = dn / ds
-                            fragments = len(m)
-                            ORF = ORFs[0:len(ORFs) - 1]
-                            annotation = annotations
+                                identity = ave(idLS)
 
-                            strand = gffDict[ORF.split("|")[0]]["strand"]
-                            contig = gffDict[ORF.split("|")[0]]["contig"]
-                            start = gffDict[ORF.split("|")[0]]["start"]
-                            end = gffDict[lastItem(ORF.split("|"))]["end"]
+                                dn = ave(dnLS)
+                                ds = ave(dsLS)
+                                try:
+                                    dnds = dn / ds
+                                except ZeroDivisionError:
+                                    dnds = "NA"
+                                fragments = len(m)
+                                ORF = ORFs[0:len(ORFs) - 1]
+                                annotation = annotations
 
-                        else:
+                                strand = gffDict[ORF.split("|")[0]]["strand"]
+                                contig = gffDict[ORF.split("|")[0]]["contig"]
+                                start = gffDict[ORF.split("|")[0]]["start"]
+                                end = gffDict[lastItem(ORF.split("|"))]["end"]
 
-                            fragments = 1
-                            originalM0 = stabilityCounter(m[0])
-                            # originalM0 = m[0]
-                            ORF = (l + "_" + str(originalM0))
+                            else:
 
-                            contig = gffDict[ORF]["contig"]
-                            start = gffDict[ORF]["start"]
-                            end = gffDict[ORF]["end"]
-                            strand = gffDict[ORF]["strand"]
+                                fragments = 1
+                                originalM0 = stabilityCounter(m[0])
+                                if delimiter == ".":
+                                    originalM0 = m[0]
+                                    ORF = (l + args.delim + str(originalM0))
+                                else:
+                                    ORF = (l + args.delim + str(originalM0))
 
-                            annotation = gffDict[ORF]["product"]
-                            seq = faa[ORF]
-                            seq2 = fna[ORF]
-
-                            TotalAlnLength = int(alnLengthDict[ORF][i])
-
-                            identity = float(alnIdDict[ORF][i])
-
-                            dn = dndsDict[ORF]["dn"]
-                            ds = dndsDict[ORF]["ds"]
-                            dnds = float(dn) / float(ds)
-
-                    except (TypeError, ValueError):
-                        if len(m) > 1:
-                            seq = ''
-                            seq2 = ''
-                            dnLS = []
-                            dsLS = []
-                            ORFs = ''
-                            TotalAlnLength = 0
-
-                            idLS = []
-
-                            for n in m:
-                                # originalN = stabilityCounter(n)
-                                originalN = n
-                                ORF = (l + "_" + str(originalN))
-
-                                ORFs += ORF + "|"
+                                contig = gffDict[ORF]["contig"]
+                                start = gffDict[ORF]["start"]
+                                end = gffDict[ORF]["end"]
+                                strand = gffDict[ORF]["strand"]
 
                                 annotation = gffDict[ORF]["product"]
-                                annotations += annotation + "|"
-                                seq += faa[ORF]
-                                seq2 += fna[ORF]
-                                dnLS.append(float(dndsDict[ORF]["dn"]))
-                                dsLS.append(float(dndsDict[ORF]["ds"]))
+                                seq = faa[ORF]
+                                seq2 = fna[ORF]
 
-                                alnLength = int(alnLengthDict[ORF][i])
-                                TotalAlnLength += alnLength
+                                TotalAlnLength = int(alnLengthDict[ORF][i])
 
                                 identity = float(alnIdDict[ORF][i])
-                                idLS.append(identity)
 
-                            identity = ave(idLS)
+                                dn = dndsDict[ORF]["dn"]
+                                ds = dndsDict[ORF]["ds"]
 
-                            dn = ave(dnLS)
-                            ds = ave(dsLS)
-                            dnds = dn / ds
-                            fragments = len(m)
-                            ORF = ORFs[0:len(ORFs) - 1]
-                            annotation = annotations
+                                try:
+                                    dnds = float(dn) / float(ds)
+                                except ZeroDivisionError:
+                                    dnds = "NA"
 
-                            contig = gffDict[ORF.split("|")[0]]["contig"]
-                            strand = gffDict[ORF.split("|")[0]]["strand"]
-                            start = gffDict[ORF.split("|")[0]]["start"]
-                            end = gffDict[lastItem(ORF.split("|"))]["end"]
+                        except (TypeError, ValueError):
+                            if len(m) > 1:
+                                seq = ''
+                                seq2 = ''
+                                dnLS = []
+                                dsLS = []
+                                ORFs = ''
+                                TotalAlnLength = 0
 
-                        else:
+                                idLS = []
 
-                            fragments = 1
-                            # originalM0 = stabilityCounter(m[0])
-                            originalM0 = m[0]
-                            ORF = (l + "_" + str(originalM0))
+                                for n in m:
+                                    # originalN = stabilityCounter(n)
+                                    originalN = n
+                                    ORF = (l + args.delim + str(originalN))
 
-                            strand = gffDict[ORF]["strand"]
-                            contig = gffDict[ORF]["contig"]
-                            start = gffDict[ORF]["start"]
-                            end = gffDict[ORF]["end"]
+                                    ORFs += ORF + "|"
 
-                            annotation = gffDict[ORF]["product"]
-                            seq = faa[ORF]
-                            seq2 = fna[ORF]
+                                    annotation = gffDict[ORF]["product"]
+                                    annotations += annotation + "|"
+                                    seq += faa[ORF]
+                                    seq2 += fna[ORF]
+                                    dnLS.append(float(dndsDict[ORF]["dn"]))
+                                    dsLS.append(float(dndsDict[ORF]["ds"]))
 
-                            TotalAlnLength = int(alnLengthDict[ORF][i])
+                                    alnLength = int(alnLengthDict[ORF][i])
+                                    TotalAlnLength += alnLength
 
-                            identity = float(alnIdDict[ORF][i])
+                                    identity = float(alnIdDict[ORF][i])
+                                    idLS.append(identity)
 
-                            dn = dndsDict[ORF]["dn"]
-                            ds = dndsDict[ORF]["ds"]
-                            dnds = float(dn) / float(ds)
+                                identity = ave(idLS)
+
+                                dn = ave(dnLS)
+                                ds = ave(dsLS)
+
+                                try:
+                                    dnds = float(dn) / float(ds)
+                                except ZeroDivisionError:
+                                    dnds = "NA"
+
+                                fragments = len(m)
+                                ORF = ORFs[0:len(ORFs) - 1]
+                                annotation = annotations
+
+                                contig = gffDict[ORF.split("|")[0]]["contig"]
+                                strand = gffDict[ORF.split("|")[0]]["strand"]
+                                start = gffDict[ORF.split("|")[0]]["start"]
+                                end = gffDict[lastItem(ORF.split("|"))]["end"]
+
+                            else:
+
+                                fragments = 1
+                                originalM0 = stabilityCounter(m[0])
+
+                                originalM0 = m[0]
+                                ORF = (l + args.delim + str(originalM0))
+
+                                strand = gffDict[ORF]["strand"]
+                                contig = gffDict[ORF]["contig"]
+                                start = gffDict[ORF]["start"]
+                                end = gffDict[ORF]["end"]
+
+                                annotation = gffDict[ORF]["product"]
+                                seq = faa[ORF]
+                                seq2 = fna[ORF]
+
+                                TotalAlnLength = int(alnLengthDict[ORF][i])
+
+                                identity = float(alnIdDict[ORF][i])
+
+                                dn = dndsDict[ORF]["dn"]
+                                ds = dndsDict[ORF]["ds"]
+
+                                try:
+                                    dnds = float(dn) / float(ds)
+                                except ZeroDivisionError:
+                                    dnds = "NA"
 
         else:
             fragments = 1
@@ -1602,7 +1707,11 @@ else:
             seq2 = fna[ORF]
             dn = dndsDict[ORF]["dn"]
             ds = dndsDict[ORF]["ds"]
-            dnds = float(dn) / float(ds)
+
+            try:
+                dnds = float(dn) / float(ds)
+            except ZeroDivisionError:
+                dnds = "NA"
 
             TotalAlnLength = int(alnLengthDict[ORF][i])
 
@@ -1611,37 +1720,85 @@ else:
         ratio = TotalAlnLength / len(faaRef[i])
 
         out.write(ORF + "," + i + ",")
+        if dnds != "NA":
+            if dnds > args.d or ratio < args.l or fragments > 1 or (len(seq) / len(faaRef[i])) > args.L:
+                out.write("Y" + ",")
+                prob = 1
 
-        if dnds > args.d or ratio < args.l or fragments > 1 or ratio / (len(seq) / len(faaRef[i])) < args.l:
-            out.write("Y" + ",")
-            prob = 1
+                # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
+                if dnds != "NA":
+                    inflation = float(dnds) / ave(dndsList)
+                else:
+                    inflation = ave(dndsList)
 
-            # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
-            inflation = float(dnds) / ave(dndsList)
+                prob = prob * inflation
+                prob = prob * float(fragments)
+                if ratio < 1:
+                    prob = prob / ratio
+                else:
+                    prob = prob * ratio
 
-            prob = prob * inflation
-            prob = prob * float(fragments)
-            if ratio < 1:
-                prob = prob / ratio
             else:
-                prob = prob * ratio
+                out.write("N" + ",")
 
+                # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
+                prob = 1
+
+                if dnds != "NA":
+                    inflation = float(dnds) / ave(dndsList)
+                else:
+                    inflation = ave(dndsList)
+
+                prob = prob * inflation
+                prob = prob * float(fragments)
+                if ratio < 1:
+                    prob = prob / ratio
+                else:
+                    prob = prob * ratio
         else:
-            out.write("N" + ",")
+            if ratio < args.l or fragments > 1 or (len(seq) / len(faaRef[i])) > args.L:
+                out.write("Y" + ",")
+                prob = 1
 
-            # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
-            prob = 1
-            inflation = float(dnds) / ave(dndsList)
-            prob = prob * inflation
-            prob = prob * float(fragments)
-            if ratio < 1:
-                prob = prob / ratio
+                # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
+                if dnds != "NA":
+                    inflation = float(dnds) / ave(dndsList)
+                else:
+                    inflation = ave(dndsList)
+
+                prob = prob * inflation
+                prob = prob * float(fragments)
+                if ratio < 1:
+                    prob = prob / ratio
+                else:
+                    prob = prob * ratio
+
             else:
-                prob = prob * ratio
+                out.write("N" + ",")
+
+                # GETTING MY STUPID PSEUDOGENE SCORE CALCULATED
+                prob = 1
+
+                if dnds != "NA":
+                    inflation = float(dnds) / ave(dndsList)
+                else:
+                    inflation = ave(dndsList)
+
+                prob = prob * inflation
+                prob = prob * float(fragments)
+                if ratio < 1:
+                    prob = prob / ratio
+                else:
+                    prob = prob * ratio
 
         # WRITING TO FILE
+
+        # print(seq)
+        # print(seq2)
+        # print(strand)
+        # print("")
         out.write(
-            str(contig) + "," + str(start) + "," + str(end) + "," + strand + "," + str(int(end) - int(start)) + "," + str(
+            str(contig) + "," + str(start) + "," + str(end) + "," + str(strand) + "," + str(int(end) - int(start)) + "," + str(
                 TotalAlnLength * 3) + "," +
             str(len(faaRef[i]) * 3) + "," + str(identity) + "," + str(annotation) + "," + str(prob) + "," +
             str(fragments) + "," + str(ratio) + "," + str(((int(end) - int(start))/3) / len(faaRef[i])) + "," + str(dn) + "," +
@@ -1649,7 +1806,8 @@ else:
 
         dnList.append(dn)
         dsList.append(ds)
-        dndsList2.append(dnds)
+        if dnds != "NA":
+            dndsList2.append(dnds)
     out.close()
 
     # INTERGENIC REGION ANALYSIS
@@ -1692,7 +1850,7 @@ else:
                 summaryDict3[ls[0]]["dN"] = ls[16]
                 summaryDict3[ls[0]]["dS"] = ls[17]
                 summaryDict3[ls[0]]["dN/dS"] = ls[18]
-                summaryDict3[ls[0]]["Translation"] = ls[18]
+                summaryDict3[ls[0]]["Translation"] = ls[19]
                 summaryDict3[ls[0]]["Sequences"] = ls[20]
             else:
                 firstRow = i.rstrip()
@@ -1881,6 +2039,7 @@ else:
 
         os.system("rm %s/summary.csv" % args.out)
 
+        count = 0
         end = 0
         out = open("%s/summary.csv" % args.out, "w")
         summaryExtend = open("%s/summary-final.csv" % args.out)
@@ -1890,10 +2049,12 @@ else:
                 start = lastItem(ls[0].split("_")).split("-")[0]
                 # start = (ls[0].split("_")[1].split("-")[0])
                 if int(start) > int(end) - 10:
+                    count += 1
                     out.write(i.rstrip() + "\n")
                 end = lastItem(ls[0].split("_")).split("-")[1]
                 # end = (ls[0].split("_")[1].split("-")[1])
             else:
+                count += 1
                 out.write(i.rstrip() + "\n")
         out.close()
 
@@ -1908,7 +2069,8 @@ else:
         print("Average dS among orthologs: " + str(ave(dsList)))
         print("Average dN/dS among orthologs: " + str(ave(dndsList2)))
         print("")
-        os.system("rm 2NG.t 2NG.dN 2NG.dS rst1 rst 2ML.t 2ML.dN 2ML.dS 4fold.nuc rub")
+
+        os.system("rm -f 2NG.t 2NG.dN 2NG.dS rst1 rst 2ML.t 2ML.dN 2ML.dS 4fold.nuc rub")
         print("Pipeline finished without any crashes. Thanks for using pseudoHunter!")
     else:
         print("")
