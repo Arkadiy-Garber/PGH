@@ -572,9 +572,10 @@ if not args.skip:
         print("Running BLAST")
         os.system("makeblastdb -dbtype prot -in %s -out %s" % (refFaa, refFaa))
         # os.system("rm makeblastdb.out")
+
         os.system("blastp -query %s -db %s "
-                  "-outfmt 6 -out %s/pseudogene.blast -evalue 1E-6 -num_threads %s -max_target_seqs 1" % (
-                      faa, refFaa, args.out, args.t))
+                  "-outfmt 6 -out %s/pseudogene.blast -num_threads %s -max_target_seqs 1 -evalue %s" % (
+                      faa, refFaa, args.out, args.t, args.e))
 
         os.system("rm %s.psq" % refFaa)
         os.system("rm %s.phr" % refFaa)
@@ -586,7 +587,7 @@ if not args.skip:
             "diamond makedb --in %s -d %s" % (args.ra, args.ra))
         # os.system("rm makedb.out")
         os.system("diamond blastp --db %s.dmnd --query %s --outfmt 6 --out %s/pseudogene.blast "
-                  "--max-target-seqs 1 --evalue 1E-6 --threads %d" % (args.ra, args.a, args.out, args.t))
+                  "--max-target-seqs 1 --threads %s --evalue %s" % (args.ra, args.a, args.out, args.t, args.e))
 
         # os.system("rm %s.dmnd" % args.ra)
 
@@ -605,6 +606,17 @@ if not args.skip:
 
     prescreened = []
     alnLengthDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
+    blast = open("%s/pseudogene.blast" % args.out)
+    counter = 0
+    for i in blast:
+        counter += 1
+    if counter > 1:
+        pass
+    else:
+        print("There appear to be no signficant DIAMOND/BLAST hits between your query and reference using the "
+              "e-value cutoff of %s. Please try again with a different reference or a less stringent e-value cutoff." % args.e)
+        raise SystemExit
+
     blast = open("%s/pseudogene.blast" % args.out)
     for i in blast:
         ls = i.rstrip().split("\t")
@@ -705,6 +717,11 @@ if not args.skip:
                     orf = ls[8]
                     orf = orf.split(";")[0]
                     orf = orf.split("=")[1]
+
+                    # if ls[2] not in ["gene", "region"]:
+                    #     print(ls)
+                    #     orf = orf.split(";locus=")[1]
+                    #     orf = orf.split(";")[0]
 
                     product = lastItem(ls[8].split(";")).split("=")[1]
                     product = replace(product, [","], ";")
@@ -1403,6 +1420,11 @@ else:
                     # else:
                     #     orf = orf.split(";")[1]
                     orf = orf.split("=")[1]
+
+                    # if ls[2] not in ["gene", "region"]:
+                    #     orf = ls[8]
+                    #     orf = orf.split(";locus=")[1]
+                    #     orf = orf.split(";")[0]
 
                     product = lastItem(ls[8].split(";")).split("=")[1]
                     product = replace(product, [","], ";")
