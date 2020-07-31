@@ -480,6 +480,10 @@ parser.add_argument('--skip', type=str,
                          "(e.g. \'-a\', \'-n\', \'-q\', \'-r\', and particulary \'-out\') still need to be provided as before",
                     const=True, nargs="?")
 
+if len(sys.argv) == 1:
+    parser.print_help(sys.stderr)
+    sys.exit(0)
+
 args = parser.parse_args()
 
 cwd = os.getcwd()
@@ -500,69 +504,74 @@ if not re.findall(r'codeml', ctl):
         ctl = args.ctl
 
 
-mode = 0
-if args.gff != "NA":
-    if args.a == "NA" or args.n == "NA":
-        print("\nLooks like you have provided a GFF file containing annotation data\n, but PseudoHunter did not find one "
-              "or more files with query ORFs\n. These are necessary if you would like to incorporate your annotations. "
-              "Please double-check your command, and make sure that \'-a\' and \'-n\' arguments are present")
-        raise SystemExit
+
+if not args.skip:
+
+    ############################################## INPUT WRANGLING ####################################################
+    mode = 0
+    if args.gff != "NA":
+        if args.a == "NA" or args.n == "NA":
+            print(
+                "\nLooks like you have provided a GFF file containing annotation data\n, but PseudoHunter did not find one "
+                "or more files with query ORFs\n. These are necessary if you would like to incorporate your annotations. "
+                "Please double-check your command, and make sure that \'-a\' and \'-n\' arguments are present")
+            raise SystemExit
+        else:
+            faa = args.a
+            fna = args.n
     else:
-        faa = args.a
-        fna = args.n
-else:
-    if args.a != "NA" or args.n != "NA":
-        if args.q != "NA":
-            print("\nLooks like you did not provide a GFF file, but have provided some ORF predictions.\n"
-                  "For PseudoHunter to use ORF prediction, it needs an associated GFF file.\nSince that was not provided, "
-                  "PseudoHunter can proceed with the provided contigs: " + args.q + "\n")
-            choice = input("Would you like PseudoHunter to proceed with the provided contigs (y/n)? ")
-            if choice == "n":
-                print("Exiting...")
-                raise SystemExit
+        if args.a != "NA" or args.n != "NA":
+            if args.q != "NA":
+                print("\nLooks like you did not provide a GFF file, but have provided some ORF predictions.\n"
+                      "For PseudoHunter to use ORF prediction, it needs an associated GFF file.\nSince that was not provided, "
+                      "PseudoHunter can proceed with the provided contigs: " + args.q + "\n")
+                choice = input("Would you like PseudoHunter to proceed with the provided contigs (y/n)? ")
+                if choice == "n":
+                    print("Exiting...")
+                    raise SystemExit
+                else:
+                    print("Alright! Moving on with " + args.q)
+                    mode = 1
+                    os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (args.q, args.q, args.q))
+                    faa = args.q + "-proteins.faa"
+                    fna = args.q + "-proteins.fna"
+
             else:
-                print("Alright! Moving on with " + args.q)
-                mode = 1
+                print("\nLooks like you did not provide a GFF file, but have provided some ORF predictions.\n"
+                      "For PseudoHunter to use ORF prediction, it needs an associated GFF file. \nPlease either "
+                      "provide a GFF file via the \'-gff\' argument.\nOr provide contigs via the \'-q\' and \'-r\' arguments.\n")
+                raise SystemExit
+        else:
+            if args.q != "NA":
                 os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (args.q, args.q, args.q))
                 faa = args.q + "-proteins.faa"
                 fna = args.q + "-proteins.fna"
+            else:
+                print("PseudoHunter did not find your input files. "
+                      "Please provide those via the \'-q\', or \'-a\' and \'-n\' arguments.")
 
+    counter = 0
+    if args.rn != "NA":
+        refFna = args.rn
+        counter += 1
+
+    if args.ra != "NA":
+        refFaa = args.ra
+        counter += 1
+
+    if counter < 2:
+        # USER DID NOT PROVIDE ONE OR BOTH OF THE ORF FILES. SO WILL USE THE CONTIGS PROVIDED BY THE ARGS.R ARGUMENT
+
+        if args.ref == "one":
+            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (args.r, args.r, args.r))
         else:
-            print("\nLooks like you did not provide a GFF file, but have provided some ORF predictions.\n"
-                  "For PseudoHunter to use ORF prediction, it needs an associated GFF file. \nPlease either "
-                  "provide a GFF file via the \'-gff\' argument.\nOr provide contigs via the \'-q\' and \'-r\' arguments.\n")
-            raise SystemExit
-    else:
-        if args.q != "NA":
-            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (args.q, args.q, args.q))
-            faa = args.q + "-proteins.faa"
-            fna = args.q + "-proteins.fna"
-        else:
-            print("PseudoHunter did not find your input files. "
-                  "Please provide those via the \'-q\', or \'-a\' and \'-n\' arguments.")
+            os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta" % (args.r, args.r, args.r))
 
-counter = 0
-if args.rn != "NA":
-    refFna = args.rn
-    counter += 1
+        refFna = args.r + "-proteins.fna"
+        refFaa = args.r + "-proteins.faa"
 
-if args.ra != "NA":
-    refFaa = args.ra
-    counter += 1
+    ##################################################################################################################
 
-if counter < 2:
-    # USER DID NOT PROVIDE ONE OR BOTH OF THE ORF FILES. SO WILL USE THE CONTIGS PROVIDED BY THE ARGS.R ARGUMENT
-
-    if args.ref == "one":
-        os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (args.r, args.r, args.r))
-    else:
-        os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta" % (args.r, args.r, args.r))
-
-    refFna = args.r + "-proteins.fna"
-    refFaa = args.r + "-proteins.faa"
-
-
-if not args.skip:
     print("Starting pipeline...")
 
     os.system("mkdir " + args.out)
@@ -938,8 +947,8 @@ if not args.skip:
                             idLS = []
 
                             for n in m:
-                                # originalN = stabilityCounter(n)
-                                originalN = n
+                                originalN = stabilityCounter(n)
+                                # originalN = n
                                 ORF = (l + args.delim + str(originalN))
 
                                 ORFs += ORF + "|"
@@ -979,8 +988,8 @@ if not args.skip:
                         else:
 
                             fragments = 1
-                            # originalM0 = stabilityCounter(m[0])
-                            originalM0 = m[0]
+                            originalM0 = stabilityCounter(m[0])
+                            # originalM0 = m[0]
                             ORF = (l + args.delim + str(originalM0))
 
                             strand = gffDict[ORF]["strand"]
@@ -1401,6 +1410,72 @@ if not args.skip:
 
 
 else:
+
+    ############################################## INPUT WRANGLING ####################################################
+    mode = 0
+    if args.gff != "NA":
+        if args.a == "NA" or args.n == "NA":
+            print(
+                "\nLooks like you have provided a GFF file containing annotation data\n, but PseudoHunter did not find one "
+                "or more files with query ORFs\n. These are necessary if you would like to incorporate your annotations. "
+                "Please double-check your command, and make sure that \'-a\' and \'-n\' arguments are present")
+            raise SystemExit
+        else:
+            faa = args.a
+            fna = args.n
+    else:
+        if args.a != "NA" or args.n != "NA":
+            if args.q != "NA":
+                print("\nLooks like you did not provide a GFF file, but have provided some ORF predictions.\n"
+                      "For PseudoHunter to use ORF prediction, it needs an associated GFF file.\nSince that was not provided, "
+                      "PseudoHunter can proceed with the provided contigs: " + args.q + "\n")
+                choice = input("Would you like PseudoHunter to proceed with the provided contigs (y/n)? ")
+                if choice == "n":
+                    print("Exiting...")
+                    raise SystemExit
+                else:
+                    print("Alright! Moving on with " + args.q)
+                    mode = 1
+                    # os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (args.q, args.q, args.q))
+                    faa = args.q + "-proteins.faa"
+                    fna = args.q + "-proteins.fna"
+
+            else:
+                print("\nLooks like you did not provide a GFF file, but have provided some ORF predictions.\n"
+                      "For PseudoHunter to use ORF prediction, it needs an associated GFF file. \nPlease either "
+                      "provide a GFF file via the \'-gff\' argument.\nOr provide contigs via the \'-q\' and \'-r\' arguments.\n")
+                raise SystemExit
+        else:
+            if args.q != "NA":
+                # os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (args.q, args.q, args.q))
+                faa = args.q + "-proteins.faa"
+                fna = args.q + "-proteins.fna"
+            else:
+                print("PseudoHunter did not find your input files. "
+                      "Please provide those via the \'-q\', or \'-a\' and \'-n\' arguments.")
+
+    counter = 0
+    if args.rn != "NA":
+        refFna = args.rn
+        counter += 1
+
+    if args.ra != "NA":
+        refFaa = args.ra
+        counter += 1
+
+    if counter < 2:
+        # USER DID NOT PROVIDE ONE OR BOTH OF THE ORF FILES. SO WILL USE THE CONTIGS PROVIDED BY THE ARGS.R ARGUMENT
+
+        # if args.ref == "one":
+        #     os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna" % (args.r, args.r, args.r))
+        # else:
+        #     os.system("prodigal -i %s -a %s-proteins.faa -d %s-proteins.fna -p meta" % (args.r, args.r, args.r))
+
+        refFna = args.r + "-proteins.fna"
+        refFaa = args.r + "-proteins.faa"
+
+    ##################################################################################################################
+
     cwd = os.getcwd()
     DIR = args.out + "/dnds-analysis"
 
@@ -1569,7 +1644,7 @@ else:
 
                                 for n in m:
                                     originalN = stabilityCounter(n)
-                                    originalN = n
+                                    # originalN = n
                                     ORF = (l + args.delim + str(originalN))
 
                                     ORFs += ORF + "|"
@@ -1648,12 +1723,12 @@ else:
                                 idLS = []
 
                                 for n in m:
-                                    # originalN = stabilityCounter(n)
-                                    originalN = n
+                                    originalN = stabilityCounter(n)
+                                    # originalN = n
                                     ORF = (l + args.delim + str(originalN))
 
                                     ORFs += ORF + "|"
-
+                                    print(ORF)
                                     annotation = gffDict[ORF]["product"]
                                     annotations += annotation + "|"
                                     seq += faa[ORF]
@@ -1691,7 +1766,7 @@ else:
                                 fragments = 1
                                 originalM0 = stabilityCounter(m[0])
 
-                                originalM0 = m[0]
+                                # originalM0 = m[0]
                                 ORF = (l + args.delim + str(originalM0))
 
                                 strand = gffDict[ORF]["strand"]
@@ -1738,7 +1813,6 @@ else:
             TotalAlnLength = int(alnLengthDict[ORF][i])
 
             identity = float(alnIdDict[ORF][i])
-
         ratio = TotalAlnLength / len(faaRef[i])
 
         out.write(ORF + "," + i + ",")
