@@ -723,18 +723,26 @@ if not args.skip:
             else:
                 if not re.match(r'#', i):
                     contig = ls[0]
-                    orf = ls[8]
-                    orf = orf.split(";")[0]
-                    orf = orf.split("=")[1]
+                    # orf = ls[8]
+                    # orf = orf.split(";")[0]
+                    # orf = orf.split("=")[1]
 
                     # if ls[2] not in ["gene", "region"]:
                     #     print(ls)
                     #     orf = orf.split(";locus=")[1]
                     #     orf = orf.split(";")[0]
 
+                    try:
+                        orf = ls[8]
+                        orf = orf.split(";locus=")[1]
+                        orf = orf.split(";")[0]
+                    except IndexError:
+                        orf = ls[8]
+                        orf = orf.split(";")[0]
+                        orf = orf.split("=")[1]
+
                     product = lastItem(ls[8].split(";")).split("=")[1]
                     product = replace(product, [","], ";")
-
                     gffDict[orf]["product"] = product
                     gffDict[orf]["contig"] = contig
                     gffDict[orf]["start"] = ls[3]
@@ -781,7 +789,6 @@ if not args.skip:
     else:
         faa = open(args.q + "-proteins.faa")
         faa = fasta2(faa)
-
 
     if args.n != "NA" and mode == 0:
         fna = open(args.n)
@@ -908,7 +915,6 @@ if not args.skip:
                             end = gffDict[lastItem(ORF.split("|"))]["end"]
 
                         else:
-
                             fragments = 1
                             originalM0 = stabilityCounter(m[0])
                             # originalM0 = m[0]
@@ -1489,17 +1495,25 @@ else:
             else:
                 if not re.match(r'#', i):
                     contig = ls[0]
-                    orf = ls[8]
+                    # orf = ls[8]
                     # if not re.findall(r'Alias', ls[8]):
-                    orf = orf.split(";")[0]
+                    # orf = orf.split(";")[0]
                     # else:
                     #     orf = orf.split(";")[1]
-                    orf = orf.split("=")[1]
+                    # orf = orf.split("=")[1]
 
                     # if ls[2] not in ["gene", "region"]:
                     #     orf = ls[8]
                     #     orf = orf.split(";locus=")[1]
                     #     orf = orf.split(";")[0]
+                    try:
+                        orf = ls[8]
+                        orf = orf.split(";locus=")[1]
+                        orf = orf.split(";")[0]
+                    except IndexError:
+                        orf = ls[8]
+                        orf = orf.split(";")[0]
+                        orf = orf.split("=")[1]
 
                     product = lastItem(ls[8].split(";")).split("=")[1]
                     product = replace(product, [","], ";")
